@@ -71,9 +71,9 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton_2">
+       <widget class="QPushButton" name="buttonFileDialogOpen">
         <property name="text">
-         <string>Найти лабиринт</string>
+         <string>Найти файл лабиринта</string>
         </property>
        </widget>
       </item>
