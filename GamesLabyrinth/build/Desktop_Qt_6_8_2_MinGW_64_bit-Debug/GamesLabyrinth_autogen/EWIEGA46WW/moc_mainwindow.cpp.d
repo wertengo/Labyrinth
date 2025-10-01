@@ -3,8 +3,11 @@ D:/projectJob/projectC++Job/QTCreatorProjetc/GamesLabyrinth/GamesLabyrinth/build
   C:/Qt/6.8.2/mingw_64/include/QtCore/QDebug \
   C:/Qt/6.8.2/mingw_64/include/QtCore/QDir \
   C:/Qt/6.8.2/mingw_64/include/QtCore/QFile \
+  C:/Qt/6.8.2/mingw_64/include/QtCore/QPoint \
+  C:/Qt/6.8.2/mingw_64/include/QtCore/QQueue \
   C:/Qt/6.8.2/mingw_64/include/QtCore/QString \
   C:/Qt/6.8.2/mingw_64/include/QtCore/QTextStream \
+  C:/Qt/6.8.2/mingw_64/include/QtCore/QVector \
   C:/Qt/6.8.2/mingw_64/include/QtCore/q20functional.h \
   C:/Qt/6.8.2/mingw_64/include/QtCore/q20iterator.h \
   C:/Qt/6.8.2/mingw_64/include/QtCore/q20memory.h \
@@ -83,6 +86,7 @@ D:/projectJob/projectC++Job/QTCreatorProjetc/GamesLabyrinth/GamesLabyrinth/build
   C:/Qt/6.8.2/mingw_64/include/QtCore/qpair.h \
   C:/Qt/6.8.2/mingw_64/include/QtCore/qpoint.h \
   C:/Qt/6.8.2/mingw_64/include/QtCore/qprocessordetection.h \
+  C:/Qt/6.8.2/mingw_64/include/QtCore/qqueue.h \
   C:/Qt/6.8.2/mingw_64/include/QtCore/qrect.h \
   C:/Qt/6.8.2/mingw_64/include/QtCore/qrefcount.h \
   C:/Qt/6.8.2/mingw_64/include/QtCore/qscopedpointer.h \
@@ -132,6 +136,7 @@ D:/projectJob/projectC++Job/QTCreatorProjetc/GamesLabyrinth/GamesLabyrinth/build
   C:/Qt/6.8.2/mingw_64/include/QtCore/qutf8stringview.h \
   C:/Qt/6.8.2/mingw_64/include/QtCore/qvariant.h \
   C:/Qt/6.8.2/mingw_64/include/QtCore/qvarlengtharray.h \
+  C:/Qt/6.8.2/mingw_64/include/QtCore/qvector.h \
   C:/Qt/6.8.2/mingw_64/include/QtCore/qversiontagging.h \
   C:/Qt/6.8.2/mingw_64/include/QtCore/qxptype_traits.h \
   C:/Qt/6.8.2/mingw_64/include/QtCore/qyieldcpu.h \

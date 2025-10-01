@@ -24,9 +24,17 @@ public slots:
 
 private slots:
     void on_buttonFileDialogOpen_clicked();
+    void on_buttonFindPath_clicked();
+    void on_tabWidget_currentChanged(int index);
 
 private:
     Ui::MainWindow *ui;
     Labyrinth* m_labyrinth;
+    void updateLabyrinthDisplay();
+    void updatePathInTable();
+    void updateTextTab();
+    void updateTableTab();
+    void setupTableWidget();
+    void colorCell(int row, int col, int cellType);
 };
 #endif // MAINWINDOW_H
