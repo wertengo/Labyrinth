@@ -13,7 +13,11 @@ class Labyrinth
 {
 public:
     Labyrinth();
+    bool hasErrors() const { return !m_lastError.isEmpty(); }
+    QString getLastError() const { return m_lastError; }
+    void clearErrors() { m_lastError.clear(); }
     void load(QString filleName);
+    void forceLoadLabyrinth(QString fillieName);
     QString draw();
     void printMapDigital();
     bool findPath();
@@ -32,7 +36,9 @@ private:
         PathNode() : distance(0) {}
     };
 
-    static const int SIZE = 10;
+    QString m_lastError;
+
+    // static const int SIZE = 10;
     int m_rows;
     int m_cols;
     static const int MAX_PATH_SIZE = 100;

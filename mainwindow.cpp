@@ -227,16 +227,77 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+// void MainWindow::loadLabyrinth(const QString& fileName)
+// {
+//     m_labyrinth->clearErrors();
+//     m_labyrinth->load(fileName);
+//     if (m_labyrinth->hasErrors()) {
+//         QMessageBox::StandardButton reply = QMessageBox::question(
+//             this, "Ошибка загрузки",
+//             "Обнаружены ошибки в файле:\n" + m_labyrinth->getLastError() +
+//                 "\n\nХотите все равно загрузить?",
+//             QMessageBox::Yes | QMessageBox::No
+//             );
+
+//         if(reply == QMessageBox::Yes) {
+//             m_labyrinth->clearErrors();
+//             m_labyrinth->forceLoadLabyrinth(fileName);
+//         }
+//     }else{
+//         m_labyrinth->printMapDigital();
+//         QString mazeText = m_labyrinth->draw();
+//         statusBar()->showMessage("Лабиринт загружен: " + fileName, 3000);
+
+//         qDebug().noquote() << "Отрисованный лабиринт:\n" << mazeText;
+//         updateTableTab();
+//     }
+// }
+
 void MainWindow::loadLabyrinth(const QString& fileName)
 {
+    m_labyrinth->clearErrors();
     m_labyrinth->load(fileName);
-    m_labyrinth->printMapDigital();
-    QString mazeText = m_labyrinth->draw();
-    statusBar()->showMessage("Лабиринт загружен: " + fileName, 3000);
 
-    qDebug().noquote() << "Отрисованный лабиринт:\n" << mazeText;
-    updateTableTab();
+    if (m_labyrinth->hasErrors()) {
+        QMessageBox::StandardButton reply = QMessageBox::question(
+            this, "Ошибка загрузки",
+            "Обнаружены ошибки в файле:\n" + m_labyrinth->getLastError() +
+                "\n\nХотите все равно загрузить?",
+            QMessageBox::Yes | QMessageBox::No
+            );
 
+        if(reply == QMessageBox::Yes) {
+            m_labyrinth->clearErrors();
+            m_labyrinth->forceLoadLabyrinth(fileName);
+
+            if(m_labyrinth->hasErrors()) {
+                qCritical() << "Ошибка при принудительной загрузке:" << m_labyrinth->getLastError();
+                statusBar()->showMessage("Ошибка загрузки: " + fileName, 3000);
+                QMessageBox::critical(this, "Ошибка",
+                                      "Не удалось загрузить файл даже в принудительном режиме:\n" +
+                                          m_labyrinth->getLastError());
+            } else {
+                m_labyrinth->printMapDigital();
+                QString mapText = m_labyrinth->draw();
+                statusBar()->showMessage("Лабиринт загружен (принудительно): " + fileName, 3000);
+                qDebug().noquote() << "Отрисованный лабиринт (принудительно):\n" << mapText;
+                updateTableTab();
+
+                QMessageBox::information(this, "Успех",
+                                         "Лабиринт загружен в принудительном режиме.\n"
+                                         "Некорректные символы были заменены на проходы.");
+            }
+        } else {
+            statusBar()->showMessage("Загрузка отменена: " + fileName, 2000);
+            qInfo() << "Пользователь отказался от загрузки файла с ошибками:" << fileName;
+        }
+    } else {
+        m_labyrinth->printMapDigital();
+        QString mapText = m_labyrinth->draw();
+        statusBar()->showMessage("Лабиринт загружен: " + fileName, 3000);
+        qDebug().noquote() << "Отрисованный лабиринт:\n" << mapText;
+        updateTableTab();
+    }
 }
 
 void MainWindow::updateLabyrinthDisplay()

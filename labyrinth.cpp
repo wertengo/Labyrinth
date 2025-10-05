@@ -31,6 +31,7 @@ void Labyrinth::initializeMap(int rows, int cols){
 }
 
 void Labyrinth::load(QString file){
+    m_lastError.clear();
     QDir currentDir;
     QString currentPath = currentDir.absolutePath();
     qDebug() << "Текущая дирректория: " << currentPath;
@@ -40,8 +41,8 @@ void Labyrinth::load(QString file){
     qDebug() << "Дирректория файла: " << filePath;
 
     if(!fileLoad.open(QIODevice::ReadWrite)){
-        qCritical() << "Could not open file!";
-        qCritical() << fileLoad.errorString();
+        m_lastError = "Не удалось открыть файл: " + fileLoad.errorString();
+        qCritical() << m_lastError;
         return;
     }
 
@@ -87,7 +88,8 @@ void Labyrinth::load(QString file){
     fileLoad.close();
 
     if(lines.isEmpty()) {
-        qCritical() << "Файл пустой!";
+        m_lastError = "Файл пустой!";
+        qCritical() << m_lastError;
         return;
     }
 
@@ -97,6 +99,8 @@ void Labyrinth::load(QString file){
     qDebug() << "Размер лабиринта:" << rows << "x" << cols;
     initializeMap(rows, cols);
 
+    bool hasInvalidChars = false;
+    QString invalidCharPositions;
 
     for(int row = 0; row < rows && row < lines.size(); row++) {
         QString line = lines[row];
@@ -107,6 +111,8 @@ void Labyrinth::load(QString file){
             if(value >= 0 && value <= 3) {
                 m_map[row][col] = value;
             } else {
+                hasInvalidChars = true;
+                invalidCharPositions += QString("[%1,%2]='%3' ").arg(row).arg(col).arg(ch);
                 qWarning() << "Некорректный символ в позиции [" << row << "," << col << "]: '" << ch << "'";
                 m_map[row][col] = 0;
             }
@@ -119,19 +125,29 @@ void Labyrinth::load(QString file){
         }
     }
 
+    if(hasInvalidChars) {
+        m_lastError = "Обнаружены некорректные символы: " + invalidCharPositions;
+        qCritical() << m_lastError;
+        return;
+    }
+
     if(startCount == 0) {
-        qCritical() << "Ошибка: не найден старт (символ '2')!";
+        m_lastError = "Ошибка: не найден старт (символ '2')!";
+        qCritical() << m_lastError;
         return;
     } else if(startCount > 1) {
-        qCritical() << "Ошибка: найдено" << startCount << "стартов, должен быть только один!";
+        m_lastError = QString("Ошибка: найдено %1 стартов, должен быть только один!").arg(startCount);
+        qCritical() << m_lastError;
         return;
     }
 
     if(exitCount == 0) {
-        qCritical() << "Ошибка: не найден выход (символ '3')!";
+        m_lastError = "Ошибка: не найден выход (символ '3')!";
+        qCritical() << m_lastError;
         return;
     } else if(exitCount > 1) {
-        qCritical() << "Ошибка: найдено" << exitCount << "выходов, должен быть только один!";
+        m_lastError = QString("Ошибка: найдено %1 выходов, должен быть только один!").arg(exitCount);
+        qCritical() << m_lastError;
         return;
     }
 
@@ -145,6 +161,86 @@ void Labyrinth::load(QString file){
 
     qInfo() << "Лабиринт успешно загружен из файла:" << file;
     qInfo() << "Размер:" << m_rows << "x" << m_cols;
+}
+
+void Labyrinth::forceLoadLabyrinth(QString file){
+    m_lastError.clear();
+
+    QDir currentDir;
+    QString currentPath = currentDir.absolutePath();
+    qDebug() << "Принудительная загрузка. Текущая директория: " << currentPath;
+
+    QFile fileLoad(file);
+    QString filePath = currentDir.absoluteFilePath(file);
+    qDebug() << "Директория файла: " << filePath;
+
+    if(!fileLoad.open(QIODevice::ReadOnly)){
+        m_lastError = "Не удалось открыть файл: " + fileLoad.errorString();
+        qCritical() << m_lastError;
+        return;
+    }
+
+    qInfo() << "Принудительная загрузка файла...";
+    QTextStream in(&fileLoad);
+
+    QVector<QString> lines;
+    int maxCols = 0;
+    int invalidCharCount = 0;
+
+    while(!in.atEnd()){
+        QString line = in.readLine().trimmed();
+        if (line.isEmpty()) {
+            continue;
+        }
+
+        lines.append(line);
+        if (line.length() > maxCols) {
+            maxCols = line.length();
+        }
+    }
+    fileLoad.close();
+
+    if(lines.isEmpty()) {
+        m_lastError = "Файл пустой!";
+        qCritical() << m_lastError;
+        return;
+    }
+
+    int rows = lines.size();
+    int cols = maxCols;
+
+    qDebug() << "Размер лабиринта:" << rows << "x" << cols;
+
+    initializeMap(rows, cols);
+
+    for(int row = 0; row < rows; row++) {
+        QString line = lines[row];
+        for(int col = 0; col < cols; col++) {
+            if(col >= line.length()) {
+                m_map[row][col] = 0;
+                continue;
+            }
+
+            QChar ch = line[col];
+            int value = ch.digitValue();
+
+            if(value >= 0 && value <= 3) {
+                m_map[row][col] = value;
+            } else {
+                m_map[row][col] = 0;
+                invalidCharCount++;
+                qWarning() << "Заменен некорректный символ в [" << row << "," << col << "]: '" << ch << "'";
+            }
+        }
+    }
+
+    m_path.clear();
+
+    qInfo() << "Лабиринт успешно загружен в принудительном режиме:" << file;
+    qInfo() << "Размер:" << m_rows << "x" << m_cols;
+    qInfo() << "Заменено некорректных символов:" << invalidCharCount;
+
+    m_lastError.clear();
 }
 
 QString Labyrinth::draw()
