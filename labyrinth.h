@@ -19,20 +19,32 @@ public:
     bool findPath();
     bool isPointInPath(int row, int col) const;
     int getCell(int row, int col) const;
-    int getPathLength() const { return m_pathLength; }
+    // int getPathLength() const { return m_pathLength; }
+    int getPathLength() const { return m_path.size(); }
+    int getRows() const { return m_rows; }
+    int getCols() const { return m_cols; }
 private:
     struct PathNode {
         QPoint point;
         int distance;
         QVector<QPoint> path;
+
+        PathNode() : distance(0) {}
     };
 
     static const int SIZE = 10;
+    int m_rows;
+    int m_cols;
     static const int MAX_PATH_SIZE = 100;
-    int m_map[SIZE][SIZE];
+    // int m_map[SIZE][SIZE];
+    // std::vector<std::vector<int>> m_map;
+    QVector<QVector<int>> m_map;
+    QVector<QPoint> m_path;
     int m_pathLength;
-    QPoint m_path[MAX_PATH_SIZE];
+    // QPoint m_path[MAX_PATH_SIZE];
+    // std::vector<QPoint> m_path;
     bool isValidPosition(int row, int col) const;
+    void initializeMap(int rows, int cols);
 };
 
 #endif // LABYRINTH_H

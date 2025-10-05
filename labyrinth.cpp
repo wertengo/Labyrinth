@@ -2,15 +2,31 @@
 
 Labyrinth::Labyrinth(){
 
-    for (int i = 0; i < SIZE; i++) {
-        for (int j = 0; j < SIZE; j++) {
+    m_cols = 0;
+    m_rows = 0;
+//     for (int i = 0; i < SIZE; i++) {
+//         for (int j = 0; j < SIZE; j++) {
+//             m_map[i][j] = 0;
+//         }
+//     }
+
+//     m_pathLength = 0;
+//     for(int i = 0; i < MAX_PATH_SIZE; i++) {
+//         m_path[i] = QPoint(-1, -1);
+//     }
+// }
+}
+
+void Labyrinth::initializeMap(int rows, int cols){
+    m_rows = rows;
+    m_cols = cols;
+
+    m_map.resize(m_rows);
+    for (int i = 0; i < m_rows; i++) {
+        m_map[i].resize(m_cols);
+        for (int j = 0; j < m_cols; j++) {
             m_map[i][j] = 0;
         }
-    }
-
-    m_pathLength = 0;
-    for(int i = 0; i < MAX_PATH_SIZE; i++) {
-        m_path[i] = QPoint(-1, -1);
     }
 }
 
@@ -31,14 +47,60 @@ void Labyrinth::load(QString file){
 
     qInfo() << "Read file...";
     QTextStream in(&fileLoad);
-    int row = 0;
+    // int row = 0;
 
-    while(!in.atEnd() && row < SIZE){
-        QString line = in.readLine();
+    QVector<QString> lines;
+    int maxCols = 0;
+    int startCount = 0;
+    int exitCount = 0;
 
-        if(line.isEmpty()) continue;
+    while(!in.atEnd()){
+        QString line = in.readLine().trimmed();
+        if (line.isEmpty()) {
+            continue;
+        }
 
-        for(int col = 0; col < SIZE && col < line.length(); col++) {
+        lines.append(line);
+        if (line.length() > maxCols) {
+            maxCols = line.length();
+        }
+    }
+
+    // while(!in.atEnd() && row < SIZE){
+    //     QString line = in.readLine();
+
+    //     if(line.isEmpty()) continue;
+
+    //     for(int col = 0; col < SIZE && col < line.length(); col++) {
+    //         QChar ch = line[col];
+    //         int value = ch.digitValue();
+
+    //         if(value >= 0 && value <= 3) {
+    //             m_map[row][col] = value;
+    //         } else {
+    //             qWarning() << "Некорректный символ в позиции [" << row << "," << col << "]: '" << ch << "'";
+    //             m_map[row][col] = -1;
+    //         }
+    //     }
+    //     row++;
+    // }
+    fileLoad.close();
+
+    if(lines.isEmpty()) {
+        qCritical() << "Файл пустой!";
+        return;
+    }
+
+    int rows = lines.size();
+    int cols = maxCols;
+
+    qDebug() << "Размер лабиринта:" << rows << "x" << cols;
+    initializeMap(rows, cols);
+
+
+    for(int row = 0; row < rows && row < lines.size(); row++) {
+        QString line = lines[row];
+        for(int col = 0; col < cols && col < line.length(); col++) {
             QChar ch = line[col];
             int value = ch.digitValue();
 
@@ -46,30 +108,54 @@ void Labyrinth::load(QString file){
                 m_map[row][col] = value;
             } else {
                 qWarning() << "Некорректный символ в позиции [" << row << "," << col << "]: '" << ch << "'";
-                m_map[row][col] = -1;
+                m_map[row][col] = 0;
+            }
+
+            if(value == 2) {
+                startCount++;
+            } else if(value == 3) {
+                exitCount++;
             }
         }
-        row++;
     }
-    fileLoad.close();
 
-    m_pathLength = 0;
-
-    if(row != SIZE) {
-        qWarning() << "Внимание: файл содержит только" << row << "строк. Ожидается" << SIZE;
+    if(startCount == 0) {
+        qCritical() << "Ошибка: не найден старт (символ '2')!";
+        return;
+    } else if(startCount > 1) {
+        qCritical() << "Ошибка: найдено" << startCount << "стартов, должен быть только один!";
+        return;
     }
+
+    if(exitCount == 0) {
+        qCritical() << "Ошибка: не найден выход (символ '3')!";
+        return;
+    } else if(exitCount > 1) {
+        qCritical() << "Ошибка: найдено" << exitCount << "выходов, должен быть только один!";
+        return;
+    }
+
+    m_path.clear();
+
+    // m_pathLength = 0;
+
+    // if(row != SIZE) {
+    //     qWarning() << "Внимание: файл содержит только" << row << "строк. Ожидается" << SIZE;
+    // }
 
     qInfo() << "Лабиринт успешно загружен из файла:" << file;
+    qInfo() << "Размер:" << m_rows << "x" << m_cols;
 }
 
 QString Labyrinth::draw()
 {
     QString result;
 
-    char drawMap[SIZE][SIZE];
+    // char drawMap[SIZE][SIZE];
+    QVector<QVector<char>> drawMap(m_rows, QVector<char>(m_cols, ' '));
 
-    for (int i = 0; i < SIZE; i++) {
-        for (int j = 0; j < SIZE; j++) {
+    for (int i = 0; i < m_rows; i++) {
+        for (int j = 0; j < m_cols; j++) {
             switch (m_map[i][j]) {
             case 0:
                 drawMap[i][j] = ' ';
@@ -90,20 +176,22 @@ QString Labyrinth::draw()
         }
     }
 
-    for(int i = 0; i < m_pathLength; i++) {
+    for(int i = 0; i < m_path.size(); i++) {
         QPoint point = m_path[i];
-        if(point.x() >= 0 && point.x() < SIZE && point.y() >= 0 && point.y() < SIZE &&
+        if(isValidPosition(point.y(), point.x()) &&
             m_map[point.y()][point.x()] != 2 && m_map[point.y()][point.x()] != 3) {
             drawMap[point.y()][point.x()] = '*';
         }
     }
 
-    for (int i = 0; i < SIZE; i++) {
-        for (int j = 0; j < SIZE; j++) {
+    for (int i = 0; i < m_rows; i++) {
+        for (int j = 0; j < m_cols; j++) {
             result += drawMap[i][j];
-            if(j < SIZE - 1) result += " ";
+            if(j < m_cols - 1) result += " ";
         }
-        result += "\n";
+        if(i < m_rows - 1){
+            result += "\n";
+        }
     }
 
     return result;
@@ -112,9 +200,9 @@ QString Labyrinth::draw()
 void Labyrinth::printMapDigital()
 {
     qDebug() << "Текущая карта лабиринта (числа):";
-    for(int i = 0; i < SIZE; i++) {
+    for(int i = 0; i < m_rows; i++) {
         QString row;
-        for(int j = 0; j < SIZE; j++) {
+        for(int j = 0; j < m_cols; j++) {
             row += QString::number(m_map[i][j]) + " ";
         }
         qDebug() << row;
@@ -123,8 +211,8 @@ void Labyrinth::printMapDigital()
 
 bool Labyrinth::findPath(){
     QPoint start(-1,-1), exit(-1,-1);
-    for (int i = 0; i < SIZE; i++) {
-        for (int j = 0; j < SIZE; j++) {
+    for (int i = 0; i < m_rows; i++) {
+        for (int j = 0; j < m_cols; j++) {
 
             if (m_map[i][j] == 2) {
                 start = QPoint(j,i);
@@ -143,12 +231,13 @@ bool Labyrinth::findPath(){
 
     qDebug() << "Поиск пути от" << start << "до" << exit;
 
-    bool visited[SIZE][SIZE];
-    for(int i = 0; i < SIZE; i++) {
-        for(int j = 0; j < SIZE; j++) {
-            visited[i][j] = false;
-        }
-    }
+    // bool visited[SIZE][SIZE];
+    QVector<QVector<bool>> visited(m_rows, QVector<bool>(m_cols, false));
+    // for(int i = 0; i < m_rows; i++) {
+    //     for(int j = 0; j < m_cols; j++) {
+    //         visited[i][j] = false;
+    //     }
+    // }
 
     QQueue<PathNode> queue;
 
@@ -167,11 +256,15 @@ bool Labyrinth::findPath(){
         QPoint currentPoint = current.point;
 
         if(currentPoint == exit) {
-            m_pathLength = current.path.size();
-            for(int i = 0; i < m_pathLength && i < MAX_PATH_SIZE; i++) {
-                m_path[i] = current.path[i];
+            // m_pathLength = current.path.size();
+            m_path.clear();
+            for(int i = 0; i < current.path.size(); i++) {
+                m_path.append(current.path[i]);
             }
-            qInfo() << "Кратчайший путь найден! Длина:" << m_pathLength;
+            // for(int i = 0; i < m_pathLength && i < MAX_PATH_SIZE; i++) {
+            //     m_path[i] = current.path[i];
+            // }
+            qInfo() << "Кратчайший путь найден! Длина:" << m_path.size();
             return true;
         }
 
@@ -179,7 +272,7 @@ bool Labyrinth::findPath(){
             int newRow = currentPoint.y() + dRow[i];
             int newCol = currentPoint.x() + dCol[i];
 
-            if(newRow >= 0 && newRow < SIZE && newCol >= 0 && newCol < SIZE &&
+            if(isValidPosition(newRow,newCol) &&
                 !visited[newRow][newCol] && m_map[newRow][newCol] != 1) {
 
                 visited[newRow][newCol] = true;
@@ -201,7 +294,7 @@ bool Labyrinth::findPath(){
 
 bool Labyrinth::isPointInPath(int row, int col) const
 {
-    for(int i = 0; i < m_pathLength; i++) {
+    for(int i = 0; i < m_path.size(); i++) {
         if(m_path[i].x() == col && m_path[i].y() == row) {
             return true;
         }
@@ -211,7 +304,7 @@ bool Labyrinth::isPointInPath(int row, int col) const
 
 bool Labyrinth::isValidPosition(int row, int col) const
 {
-    return (row >= 0 && row < SIZE && col >= 0 && col < SIZE);
+    return (row >= 0 && row < m_rows && col >= 0 && col < m_cols);
 }
 
 int Labyrinth::getCell(int row, int col) const

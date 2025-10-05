@@ -35,19 +35,21 @@ void MainWindow::setupTableWidget()
         return;
     }
 
-    const int SIZE = 10;
+    // const int SIZE = 10;
 
-    ui->labyrintMapField->setRowCount(SIZE);
-    ui->labyrintMapField->setColumnCount(SIZE);
+    // ui->labyrintMapField->setRowCount(SIZE);
+    // ui->labyrintMapField->setColumnCount(SIZE);
+    ui->labyrintMapField->setRowCount(1);
+    ui->labyrintMapField->setColumnCount(1);
 
     ui->labyrintMapField->setShowGrid(true);
     ui->labyrintMapField->setSelectionMode(QAbstractItemView::NoSelection);
     ui->labyrintMapField->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
-    for(int i = 0; i < SIZE; i++) {
-        ui->labyrintMapField->setRowHeight(i, 40);
-        ui->labyrintMapField->setColumnWidth(i, 40);
-    }
+    // for(int i = 0; i < SIZE; i++) {
+    //     ui->labyrintMapField->setRowHeight(i, 40);
+    //     ui->labyrintMapField->setColumnWidth(i, 40);
+    // }
 
     ui->labyrintMapField->verticalHeader()->setVisible(false);
     ui->labyrintMapField->horizontalHeader()->setVisible(false);
@@ -66,28 +68,54 @@ void MainWindow::updatePathInTable()
 
     qDebug() << "Обновление пути в таблице...";
 
-    for(int row = 0; row < 10; row++) {
-        for(int col = 0; col < 10; col++) {
+    int rows = m_labyrinth->getRows();
+    int cols = m_labyrinth->getCols();
+
+    for(int row = 0; row < rows; row++) {
+        for(int col = 0; col < cols; col++) {
             QTableWidgetItem *item = ui->labyrintMapField->item(row, col);
             if(item) {
                 int cellValue = m_labyrinth->getCell(row, col);
-                bool isInPath = m_labyrinth->isPointInPath(row, col);
-
-                if(isInPath && cellValue == 0) {
-                    item->setText("*");
-                    item->setBackground(QBrush(QColor(173, 216, 230)));
-                    item->setForeground(Qt::blue);
-                    qDebug() << "Ячейка [" << row << "," << col << "] - часть пути";
-                } else if(cellValue == 0) {
+                // bool isInPath = m_labyrinth->isPointInPath(row, col);
+                if(cellValue == 0 && item->text() == "*") {
                     item->setText(" ");
                     item->setBackground(QBrush(Qt::white));
                     item->setForeground(Qt::black);
+                }
+
+                // if(isInPath && cellValue == 0) {
+                //     item->setText("*");
+                //     item->setBackground(QBrush(QColor(173, 216, 230)));
+                //     item->setForeground(Qt::blue);
+                //     qDebug() << "Ячейка [" << row << "," << col << "] - часть пути";
+                // } else if(cellValue == 0) {
+                //     item->setText(" ");
+                //     item->setBackground(QBrush(Qt::white));
+                //     item->setForeground(Qt::black);
+                // }
+            }
+        }
+    }
+
+    for(int row = 0; row < rows; row++) {
+        for(int col = 0; col < cols; col++) {
+            if(m_labyrinth->isPointInPath(row, col)) {
+                QTableWidgetItem *item = ui->labyrintMapField->item(row, col);
+                if(item) {
+                    int cellValue = m_labyrinth->getCell(row, col);
+                    // Отмечаем путь только если это проход (не старт и не выход)
+                    if(cellValue == 0) {
+                        item->setText("*");
+                        item->setBackground(QBrush(QColor(173, 216, 230)));
+                        item->setForeground(Qt::blue);
+                    }
                 }
             }
         }
     }
 
     qDebug() << "Обновление пути завершено";
+    qDebug() << "Длина пути:" << m_labyrinth->getPathLength();
 }
 
 void MainWindow::updateTableTab()
@@ -99,10 +127,26 @@ void MainWindow::updateTableTab()
         return;
     }
 
-    const int SIZE = 10;
+    // const int SIZE = 10;
+    int rows = m_labyrinth->getRows();
+    int cols = m_labyrinth->getCols();
 
-    for(int row = 0; row < SIZE; row++) {
-        for(int col = 0; col < SIZE; col++) {
+    qDebug() << "Устанавливаем размер таблицы:" << rows << "x" << cols;
+
+    ui->labyrintMapField->setRowCount(rows);
+    ui->labyrintMapField->setColumnCount(cols);
+
+    for(int i = 0; i < rows; i++) {
+        ui->labyrintMapField->setRowHeight(i, 40);
+    }
+    for(int i = 0; i < cols; i++) {
+        ui->labyrintMapField->setColumnWidth(i, 40);
+    }
+
+    ui->labyrintMapField->clear();
+
+    for(int row = 0; row < rows; row++) {
+        for(int col = 0; col < cols; col++) {
             int cellValue = m_labyrinth->getCell(row, col);
             qDebug() << "Ячейка [" << row << "," << col << "] =" << cellValue;
 
